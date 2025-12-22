@@ -126,8 +126,8 @@ Because of `-R`, the standby will have `standby.signal` and will attempt to conn
 
 On the primary:
 
-```
-SELECT * from pg_replication_slots;
+```sql
+SELECT * FROM pg_replication_slots;
 
 ```
 
