@@ -1,6 +1,6 @@
 # Replication in PostgreSQL
 
-This document describes a simple primary → standby (primary-secondary) physical replication setup for PostgreSQL (Postgres). The primary handles writes and one or more standbys replicate the WAL stream and can serve read-only queries for read scaling or failover.
+This document describes a simple primary → standby replication setup for PostgreSQL. The primary handles writes and one or more standbys replicate the WAL stream and can serve read-only queries for read scaling or failover.
 
 ## Prerequisites
 - PostgreSQL installed on primary and standby.
@@ -9,7 +9,7 @@ This document describes a simple primary → standby (primary-secondary) physica
 ## Overview of the steps
 1. Configure primary (`postgresql.conf` and `pg_hba.conf`) to allow replication.
 2. Create a replication role on the primary.
-3. Take a base backup from the primary onto each standby.
+3. Take a base backup from the primary into standby.
 4. Start the standby and verify replication.
 
 ---
@@ -34,7 +34,7 @@ password_encryption = md5
 $ sudo -u postgres psql
 ```
 
-Add password encryption password:
+Show password encryption :
 
 
 ```
