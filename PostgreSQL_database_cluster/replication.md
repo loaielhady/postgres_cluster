@@ -7,8 +7,8 @@
 This document describes a simple primary → standby (primary-secondary) physical replication setup for PostgreSQL (Postgres). The primary handles writes and one or more standbys replicate the WAL stream and can serve read-only queries for read scaling or failover.
 
 ## Prerequisites
-- PostgreSQL installed on primary and standby (same major version recommended, 16).
-- Network connectivity (TCP port 5432) from standby(s) to primary.
+- PostgreSQL installed on primary and standby.
+- Network connectivity port 5432 from standby to primary.
 
 ## Overview of the steps
 1. Configure primary (`postgresql.conf` and `pg_hba.conf`) to allow replication.
@@ -89,7 +89,7 @@ $ sudo systemctl restart postgresql
 sudo systemctl stop postgresql
 ```
 
-2. Remove or move existing data directory on the standby (local data):
+2. Remove or move existing data directory on the standby :
 
 ```bash
 sudo -i -u postgres bash
