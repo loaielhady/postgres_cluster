@@ -1,3 +1,7 @@
+
+![unnamed (1)](https://github.com/user-attachments/assets/0fcde13d-38cc-47de-8ca4-1475f59d857e)
+
+
 # Replication in PostgreSQL
 
 This document describes a simple primary → standby (primary-secondary) physical replication setup for PostgreSQL (Postgres). The primary handles writes and one or more standbys replicate the WAL stream and can serve read-only queries for read scaling or failover.
@@ -103,9 +107,9 @@ sudo -u postgres pg_basebackup -h PRIMARY_IP \
 ```
 
 Notes:
-- `-R` writes a `standby.signal` file and `primary_conninfo` into `postgresql.auto.conf` (Postgres 12+), enabling automatic connection to primary on startup.
+- `-R` writes a `standby.signal` file and `primary_conninfo` into `postgresql.auto.conf` , enabling automatic connection to primary on startup.
 - `-X stream` streams WAL with the base backup.
-- `-S node_name` creates a replication slot with the given name (requires permission and that slot does not exist).
+- `-S node_name` creates a replication slot with the given name.
 - Ensure the destination directory is owned by the `postgres` user and has correct permissions:
 
 ```bash
