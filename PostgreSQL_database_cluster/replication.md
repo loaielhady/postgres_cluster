@@ -1,34 +1,48 @@
-# Replication in postgresSQL
+# Replication in PostgreSQL
 
-Primary-secondary replication is a common setup in PostgreSQL cluster, where the primary database handles all write operations, while the standby handles read operations.
-This allows for read scalability, as multiple replicas can distribute the load of read queries across the cluster, reducing the performance impact on the primary database.
+This document describes a simple primary → standby (primary-secondary) physical replication setup for PostgreSQL (Postgres). The primary handles writes and one or more standbys replicate the WAL stream and can serve read-only queries for read scaling or failover.
 
-## Setup for replication in Primary server :-
+## Prerequisites
+- PostgreSQL installed on primary and standby (same major version recommended, 16).
+- Network connectivity (TCP port 5432) from standby(s) to primary.
 
-```
-listen_addresses = '*'				
-wal_level = replica
+## Overview of the steps
+1. Configure primary (`postgresql.conf` and `pg_hba.conf`) to allow replication.
+2. Create a replication role on the primary.
+3. Take a base backup from the primary onto each standby.
+4. Start the standby(s) and verify replication.
+
+---
+
+## Primary server configuration
+
+```conf
+# Listen on all addresses (or list specific IPs)
+listen_addresses = '*'
+
+# WAL and replication settings
+wal_level = replica                 # or 'logical' if using logical replication
 max_wal_senders = 10
-wal_keep_size = 64	
-hot_standby = on
+max_replication_slots = 10          # if you plan to use replication slots
+wal_keep_size = '64MB'              # prevents removal of recent WAL files
 password_encryption = md5
 
 ```
-
-## postgres 
+## postgres user database configuration
 
 ```
 $ sudo -u postgres psql
 ```
 
-add password:
+Add password encryption password:
+
 
 ```
 SHOW password_encryption;
 
 ```
 
-### set encryption password:
+Set encryption password:
 
 
 ```
@@ -36,20 +50,20 @@ ALTER SYSTEM SET password_encryption = 'md5';
 
 ```
 
-add replication user:
+Add replication user:
 
 ```
 CREATE USER replicator WITH REPLICATION ENCRYPTED PASSWORD  'your_password';
 
 ```
-### create user with password:
+Create user with password:
 
 ```
 ALTER USER postgres WITH PASSWORD  'your_password';
 
 ```
 
-## pg_hba.conf editing in master:
+### pg_hba.conf changes (primary)
 
 ```
 host    replication     replicator      your.ip.address/..         md5
@@ -63,35 +77,66 @@ $ sudo systemctl restart postgresql
 
 ```
 
-### setting in Standby
+## Standby setup (base backup method)
 
-```
-$ sudo systemctl stop postgresql
+1. Stop PostgreSQL on the standby:
 
-```
-### swich to user postgres 
-
-```
-$ sudo -i -u postgres bash
+```bash
+sudo systemctl stop postgresql
 ```
 
-remove main file from standby server
-```
-$ sudo rm -rf /var/lib/postgresql/16/main/
+2. Remove or move existing data directory on the standby (local data):
 
-```
-#### copy files from primary server:
-
-```
-pg_basebackup -h your.primary.server.ip/address  -D /var/lib/postgres/16/main/  -U replicator -P -v -R -X stream -C -S node_name
-
+```bash
+sudo -i -u postgres bash
+rm -rf /var/lib/postgresql/16/main/*
+exit
 ```
 
-### Restart postgres and test :
+3. Take a base backup from the primary using `pg_basebackup`. Run this on the standby as the `postgres` user:
+
+```bash
+# run as postgres user
+sudo -u postgres pg_basebackup -h PRIMARY_IP \
+  -D /var/lib/postgresql/16/main \
+  -U replicator -v -P -R -X stream -S node_name
+```
+
+Notes:
+- `-R` writes a `standby.signal` file and `primary_conninfo` into `postgresql.auto.conf` (Postgres 12+), enabling automatic connection to primary on startup.
+- `-X stream` streams WAL with the base backup.
+- `-S node_name` creates a replication slot with the given name (requires permission and that slot does not exist).
+- Ensure the destination directory is owned by the `postgres` user and has correct permissions:
+
+```bash
+sudo chown -R postgres:postgres /var/lib/postgresql/16/main
+```
+
+4. Start PostgreSQL on the standby:
+
+```bash
+sudo systemctl start postgresql
+```
+
+Because of `-R`, the standby will have `standby.signal` and will attempt to connect to the primary automatically.
+
+---
+
+## Verifying replication
+
+On the primary:
 
 ```
 SELECT * from pg_replication_slots;
 
 ```
 
+On the standby:
 
+```sql
+-- returns true if this server is in recovery
+SELECT pg_is_in_recovery();
+
+-- show current replication connection info
+SELECT * FROM pg_stat_wal_receiver;
+```
