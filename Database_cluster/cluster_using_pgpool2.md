@@ -1,9 +1,9 @@
 # Pgpool
 
-Pgpool is an open-source middleware that sits between PostgreSQL databases and client applications, acting as a proxy to provide features like load balancing, connection pooling, and automatic failover for high availability and scalability. It transparently handles database requests, directing reads to multiple servers and writes to a master, significantly boosting performance by reducing connection overhead and distributing workload without requiring major application code changes. 
+Pgpool is an open-source middleware that sits between PostgreSQL databases and client applications, features like load balancing, connection pooling, and automatic failover for high availability and scalability. It transparently handles database requests, directing reads to multiple servers and writes to a master, significantly boosting performance by reducing connection overhead and distributing workload without requiring major application code changes. 
 
 ## Prerequisites
-- pgpool-II installed on server
+- pgpool-II installed on server.
 - connectivety between primary and standby server to pgpool-II server.
 
 ## Overview of the steps
@@ -11,17 +11,21 @@ Pgpool is an open-source middleware that sits between PostgreSQL databases and c
 2. Configure primary (`pgpool.conf` , `cpc.conf` and `pool.hba.conf`) to allow pgpool-II work.
 
 
-setup ip of pgpool to all servers primary and standby.
+## setup ip of pgpool to all servers primary and standby.
 
-in that path 
+Step 1 in that path :
+  
 ```
 sudo nano /etc/postgresql/16/main/pg_hba.conf
 ```
 
+Add : 
 
 ```
 host        all      all     pgpool.ip.address/       md5
 ```
+## Setup pgpool2 configuration:
+
 
 ```
 listen_addresses = '*'
@@ -63,16 +67,33 @@ hostname0 = ''
 ```
 
 
-setting up a `pool_hba.conf` file
+### Setting up a `pool_hba.conf` file
 
 ```
 host    all         postgres    Primary_ip       md5
 host    all         postgres    Standby_ip       md5
 ```
 
-Script for log 
+- Add a username and password of replication  to `cpc.conf`
+  
+### Create log file
 
-### failback script:
+```
+sudo mkdir -p /var/log/pgpool
+sudo chown postgres:postgres /var/log/pgpool
+```
+
+### change owner of file by:
+
+```
+sudo chown /etc/pgpool2/failover.sh
+sudo chown /etc/pgpool2/failback.sh
+```
+
+### Script for log 
+
+- failback script:
+  
 ```
 #!/bin/bash 
 FAILED_NODE_ID=$1
@@ -80,7 +101,7 @@ echo "Reataching node $FAILED_NODE_ID to pgpool-II after recovery."
 exit 0
 ```
 
-### failover script:
+- failover script:
 
 ```
 #!/bin/bash
@@ -93,17 +114,6 @@ if [ $FAILED_NODE_ID -eq 0 ]; then
 fi
 exit 0
 ```
-change owner of file by:
-```
-sudo chown /etc/pgpool2/failover.sh
-sudo chown /etc/pgpool2/failback.sh
-```
-
-```
-sudo mkdir -p /var/log/pgpool
-sudo chown postgres:postgres /var/log/pgpool
-sudo systemctl restart pgpool2
-```
 
 ### start pgpool
 
@@ -114,11 +124,12 @@ sudo enable pgpool2
 
 ### Test pgpool 
 
-from any client enter
+- from any client type :
 
 ```
 psql -h <pgpool-ip>   -p  9999  -U postgres
 ```
+- And
 ```sql
 SHOW pool_nodes;
 ```
