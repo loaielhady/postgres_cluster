@@ -83,19 +83,15 @@ sudo mkdir -p /var/log/pgpool
 sudo chown postgres:postgres /var/log/pgpool
 ```
 
-### change owner of file by:
 
-```
-sudo mkdir -p /etc/pgpool2/failover.sh
-sudo mkdir -p /etc/pgpool2/failback.sh
-
-sudo chown postgres:postgres /etc/pgpool2/failover.sh
-sudo chown postgres:postgres /etc/pgpool2/failback.sh
-```
-
-### Script for log 
+### Create a file and add scripts:
 
 - failback script:
+
+  ```
+  sudo vi failback.sh
+  ```
+
   
 ```
 #!/bin/bash 
@@ -105,6 +101,11 @@ exit 0
 ```
 
 - failover script:
+
+
+```
+sudo vi failover.sh
+```
 
 ```
 #!/bin/bash
@@ -117,6 +118,13 @@ if [ $FAILED_NODE_ID -eq 0 ]; then
 fi
 exit 0
 ```
+
+### change owner of file by: 
+```
+sudo chown postgres:postgres /etc/pgpool2/failover.sh
+sudo chown postgres:postgres /etc/pgpool2/failback.sh
+```
+
 
 ### start pgpool
 
@@ -133,6 +141,8 @@ sudo enable pgpool2
 psql -h <pgpool-ip>   -p  9999  -U postgres
 ```
 - And
+
+
 ```sql
 SHOW pool_nodes;
 ```
