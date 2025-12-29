@@ -24,7 +24,7 @@ Add :
 ```
 host        all      all     pgpool.ip.address/       md5
 ```
-## Setup pgpool2 configuration:
+## Setup pgpool2 configuration file :
 
 
 ```
@@ -86,8 +86,11 @@ sudo chown postgres:postgres /var/log/pgpool
 ### change owner of file by:
 
 ```
-sudo chown /etc/pgpool2/failover.sh
-sudo chown /etc/pgpool2/failback.sh
+sudo mkdir -p /etc/pgpool2/failover.sh
+sudo mkdir -p /etc/pgpool2/failback.sh
+
+sudo chown postgres:postgres /etc/pgpool2/failover.sh
+sudo chown postgres:postgres /etc/pgpool2/failback.sh
 ```
 
 ### Script for log 
